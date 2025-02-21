@@ -23,6 +23,7 @@ async function run() {
   try {
     const db = client.db("task_management");
     const taskCollections = db.collection("tasks");
+    const userCollections = db.collection('users')
 
     app.post("/tasks", async (req, res) => {
       const task = req.body;
@@ -65,6 +66,36 @@ async function run() {
         updateTask,
         options
       );
+      res.send(result);
+    });
+
+    app.patch("/task/:id", async (req, res) => {
+      const id = req.params.id;
+      const { category } = req.body;
+    
+      try {
+        const filter = { _id: new ObjectId(id) };
+        const updateTask = { $set: { category } };
+        const result = await taskCollections.updateOne(filter, updateTask);
+    
+        if (result.modifiedCount === 0) {
+          return res.status(404).json({ message: "Task not found or no change detected" });
+        }
+    
+        res.json({ message: "Category updated successfully", result });
+      } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+      }
+    });
+
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const query = { email: user.email };
+      const isExist = await userCollections.findOne(query);
+      if (isExist) {
+        return res.send({ message: "User already exsist", insertedId: null });
+      }
+      const result = await userCollections.insertOne(user);
       res.send(result);
     });
 
