@@ -99,6 +99,28 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/task/reorder", async (req, res) => {
+      const { tasks } = req.body;
+    
+      try {
+        const updatePromises = tasks.map((task, index) =>
+          taskCollections.updateOne(
+            { _id: new ObjectId(task._id) },
+            { $set: { order: index } } 
+          )
+        );
+    
+        await Promise.all(updatePromises); 
+    
+        res.status(200).json({ message: "Task order updated successfully!" });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error", error });
+      }
+    });
+    
+
+
   } finally {
   }
 }
